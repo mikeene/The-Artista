@@ -1,3 +1,7 @@
 node_modules/
 logs/
 .DS_Store
+mobile/.expo/
+web/dist/
+web/*.tsbuildinfo
+web/src/*.js
