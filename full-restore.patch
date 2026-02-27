@@ -1,0 +1,188 @@
+diff --git a/web/index.html b/web/index.html
+new file mode 100644
+--- /dev/null
++++ b/web/index.html
+@@ -0,0 +1,12 @@
++<!doctype html>
++<html lang="en">
++  <head>
++    <meta charset="UTF-8" />
++    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
++    <title>Artista</title>
++  </head>
++  <body class="bg-slate-50">
++    <div id="root"></div>
++    <script type="module" src="/src/main.tsx"></script>
++  </body>
++</html>
+diff --git a/web/package.json b/web/package.json
+new file mode 100644
+--- /dev/null
++++ b/web/package.json
+@@ -0,0 +1,27 @@
++{
++  "name": "artista-web",
++  "private": true,
++  "version": "0.1.0",
++  "type": "module",
++  "scripts": {
++    "dev": "vite",
++    "build": "tsc -b && vite build",
++    "preview": "vite preview"
++  },
++  "dependencies": {
++    "firebase": "^11.0.0",
++    "react": "^18.3.1",
++    "react-dom": "^18.3.1",
++    "react-router-dom": "^6.27.0"
++  },
++  "devDependencies": {
++    "@types/react": "^18.3.12",
++    "@types/react-dom": "^18.3.1",
++    "@vitejs/plugin-react": "^4.3.2",
++    "autoprefixer": "^10.4.20",
++    "postcss": "^8.4.47",
++    "tailwindcss": "^3.4.13",
++    "typescript": "^5.6.3",
++    "vite": "^5.4.9"
++  }
++}
+diff --git a/web/tsconfig.json b/web/tsconfig.json
+new file mode 100644
+--- /dev/null
++++ b/web/tsconfig.json
+@@ -0,0 +1,13 @@
++{
++  "compilerOptions": {
++    "target": "ES2020",
++    "module": "ESNext",
++    "moduleResolution": "Bundler",
++    "jsx": "react-jsx",
++    "strict": true,
++    "skipLibCheck": true,
++    "baseUrl": "./src",
++    "types": ["vite/client"]
++  },
++  "include": ["src"]
++}
+diff --git a/web/vite.config.ts b/web/vite.config.ts
+new file mode 100644
+--- /dev/null
++++ b/web/vite.config.ts
+@@ -0,0 +1,6 @@
++import { defineConfig } from 'vite';
++import react from '@vitejs/plugin-react';
++
++export default defineConfig({
++  plugins: [react()]
++});
+diff --git a/web/postcss.config.js b/web/postcss.config.js
+new file mode 100644
+--- /dev/null
++++ b/web/postcss.config.js
+@@ -0,0 +1,6 @@
++export default {
++  plugins: {
++    tailwindcss: {},
++    autoprefixer: {}
++  }
++};
+diff --git a/web/tailwind.config.js b/web/tailwind.config.js
+new file mode 100644
+--- /dev/null
++++ b/web/tailwind.config.js
+@@ -0,0 +1,13 @@
++/** @type {import('tailwindcss').Config} */
++export default {
++  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
++  theme: {
++    extend: {
++      colors: {
++        brand: '#7c3aed'
++      }
++    }
++  },
++  plugins: []
++};
++
+diff --git a/web/src/index.css b/web/src/index.css
+new file mode 100644
+--- /dev/null
++++ b/web/src/index.css
+@@ -0,0 +1,7 @@
++@tailwind base;
++@tailwind components;
++@tailwind utilities;
++
++body {
++  font-family: Inter, system-ui, sans-serif;
++}
+diff --git a/web/src/main.tsx b/web/src/main.tsx
+new file mode 100644
+--- /dev/null
++++ b/web/src/main.tsx
+@@ -0,0 +1,64 @@
++import React from 'react';
++import ReactDOM from 'react-dom/client';
++import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
++import './index.css';
++import { AuthProvider, useAuth } from './context/AuthContext';
++import { AppShell } from './layout/AppShell';
++import { AdminPage } from './pages/AdminPage';
++import { ArtistProfilePage } from './pages/ArtistProfilePage';
++import { ArtworkDetailPage } from './pages/ArtworkDetailPage';
++import { AuthPage } from './pages/AuthPage';
++import { ExplorePage } from './pages/ExplorePage';
++import { FeedPage } from './pages/FeedPage';
++import { MessagesPage } from './pages/MessagesPage';
++import { NotificationsPage } from './pages/NotificationsPage';
++import { ProfileSetupPage } from './pages/ProfileSetupPage';
++import { UploadPage } from './pages/UploadPage';
++
++function ProtectedApp() {
++  const { user, loading, hasCompletedProfile } = useAuth();
++
++  if (loading) return <div className="p-8">Loading...</div>;
++  if (!user) return <Navigate to="/auth" replace />;
++  if (!hasCompletedProfile) return <Navigate to="/profile-setup" replace />;
++
++  return (
++    <Routes>
++      <Route path="/" element={<AppShell />}>
++        <Route index element={<FeedPage />} />
++        <Route path="upload" element={<UploadPage />} />
++        <Route path="artwork/:artworkId" element={<ArtworkDetailPage />} />
++        <Route path="artist/:artistId" element={<ArtistProfilePage />} />
++        <Route path="messages" element={<MessagesPage />} />
++        <Route path="notifications" element={<NotificationsPage />} />
++        <Route path="explore" element={<ExplorePage />} />
++        <Route path="admin" element={<AdminPage />} />
++      </Route>
++    </Routes>
++  );
++}
++
++function AppRoutes() {
++  const { user, hasCompletedProfile } = useAuth();
++
++  return (
++    <Routes>
++      <Route
++        path="/auth"
++        element={user ? <Navigate to={hasCompletedProfile ? '/' : '/profile-setup'} replace /> : <AuthPage />}
++      />
++      <Route path="/profile-setup" element={<ProfileSetupPage />} />
++      <Route path="/*" element={<ProtectedApp />} />
++    </Routes>
++  );
++}
++
++ReactDOM.createRoot(document.getElementById('root')!).render(
++  <React.StrictMode>
++    <BrowserRouter>
++      <AuthProvider>
++        <AppRoutes />
++      </AuthProvider>
++    </BrowserRouter>
++  </React.StrictMode>
++);
